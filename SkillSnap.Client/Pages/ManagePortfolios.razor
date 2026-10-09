@@ -1,0 +1,63 @@
+@* Manager/Admin list of all user portfolios to drill into. *@
+@page "/manage/portfolios"
+@attribute [Authorize(Roles = "Manager,Admin")]
+@implements IDisposable
+@using SkillSnap.Shared.Models
+@using SkillSnap.Client.Services
+@inject PortfolioUserService PortfolioUsers
+@inject NavigationManager Navigation
+
+<PageTitle>Manage · User Portfolios</PageTitle>
+
+<h1>User Portfolios</h1>
+<p class="text-muted">Select a user to view their projects and skills.</p>
+
+@if (_users is null)
+{
+    <p>Loading…</p>
+}
+else if (_users.Count == 0)
+{
+    <div class="alert alert-info">No users found.</div>
+}
+else
+{
+    <div class="table-responsive">
+        <table class="table align-middle">
+            <thead>
+                <tr>
+                    <th>Username</th>
+                    <th>Name</th>
+                    <th style="width: 10rem;"></th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var user in _users)
+                {
+                    <tr>
+                        <td>@user.UserName</td>
+                        <td>@user.FullNameOr("—")</td>
+                        <td>
+                            <button class="btn btn-sm btn-primary"
+                                    @onclick="() => View(user.Id)">
+                                View portfolio
+                            </button>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+}
+
+@code {
+    private List<PortfolioUser>? _users;
+    private readonly CancellationTokenSource _cts = new();
+
+    protected override async Task OnInitializedAsync()
+        => _users = await PortfolioUsers.GetAllAsync(_cts.Token);
+
+    private void View(int id) => Navigation.NavigateTo($"/manage/portfolios/{id}");
+
+    public void Dispose() => _cts.Cancel();
+}

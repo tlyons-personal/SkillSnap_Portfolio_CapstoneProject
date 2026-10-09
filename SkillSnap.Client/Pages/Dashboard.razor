@@ -1,0 +1,15 @@
+@page "/dashboard"
+@attribute [Authorize]
+@using SkillSnap.Client.Components
+
+<h1>Your Dashboard</h1>
+<p class="text-muted">Jump into any area of your portfolio.</p>
+
+<section class="feature-grid">
+    <FeatureCard Icon="bi-person-badge" Title="Edit Profile"
+                 Text="Update your name, bio, and photo." Href="profile" />
+    <FeatureCard Icon="bi-kanban" Title="Projects"
+                 Text="Add, edit, or remove projects." Href="projects" />
+    <FeatureCard Icon="bi-stars" Title="Skills"
+                 Text="Add, edit, or remove skills." Href="skills" />
+</section>

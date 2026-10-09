@@ -1,0 +1,12 @@
+/* Components/FeatureCard.razor.css (scoped) */
+.feature-card {
+    background: #2A3956;
+    border: 1px solid rgba(255,255,255,.12);
+    border-radius: 14px;
+    padding: 1.75rem;
+    text-decoration: none;
+    color: #F5F5F5;
+    transition: transform .15s ease, background .15s ease;
+}
+.feature-card:hover { transform: translateY(-4px); background: #33446A; }
+.feature-icon { font-size: 2rem; display: block; margin-bottom: .75rem; color: #F4B942; }

@@ -1,0 +1,66 @@
+@* Lists the user's skills and allows adding or deleting them. *@
+@page "/skills"
+@attribute [Authorize]
+@implements IDisposable
+@using SkillSnap.Shared.DTOs
+@using SkillSnap.Shared.Models
+@using SkillSnap.Client.Services
+@inject SkillService SkillService
+
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <h1>Skills</h1>
+</div>
+
+<div class="card p-3 mb-4">
+    <EditForm Model="_newSkill" OnValidSubmit="AddAsync">
+        <div class="row g-2 align-items-end">
+            <div class="col">
+                <label class="form-label">Skill</label>
+                <InputText class="form-control" @bind-Value="_newSkill.Name" />
+            </div>
+            <div class="col-auto">
+                <label class="form-label">Level</label>
+                <InputSelect class="form-select" @bind-Value="_newSkill.Level">
+                    @foreach (var level in Enum.GetValues<SkillLevel>())
+                    {
+                        <option value="@level">@level</option>
+                    }
+                </InputSelect>
+            </div>
+            <div class="col-auto">
+                <button class="btn btn-success" type="submit">Add Skill</button>
+            </div>
+        </div>
+    </EditForm>
+</div>
+
+@if (_skills is not null)
+{
+    <div class="d-flex flex-wrap gap-2">
+        @foreach (var s in _skills)
+        {
+            <SkillBadge Skill="s" OnDelete="DeleteAsync" />
+        }
+    </div>
+}
+
+@code {
+    private List<SkillDto>? _skills;
+    private Skill _newSkill = new() { Name = "", Level = SkillLevel.Beginner };
+    private readonly CancellationTokenSource _cts = new();
+
+    protected override async Task OnInitializedAsync()
+        => _skills = await SkillService.GetAsync(ct: _cts.Token);
+
+    private async Task AddAsync()
+    {
+        // AddAsync appends to the cached list that _skills already references — no reload needed.
+        await SkillService.AddAsync(_newSkill, _cts.Token);
+        _newSkill = new() { Name = "", Level = SkillLevel.Beginner };
+    }
+
+    private async Task DeleteAsync(int id)
+        => await SkillService.DeleteAsync(id, _cts.Token);
+
+    public void Dispose() => _cts.Cancel();
+}

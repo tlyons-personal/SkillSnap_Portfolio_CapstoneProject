@@ -1,0 +1,158 @@
+@* Admin-only page to list users, promote roles, and delete accounts. *@
+@page "/admin"
+@attribute [Authorize(Roles = "Admin")]
+@implements IDisposable
+@using SkillSnap.Shared.DTOs
+@using SkillSnap.Client.Services
+@inject AdminService AdminService
+
+<PageTitle>Admin · Manage Roles</PageTitle>
+
+<h1>Manage Users</h1>
+<p class="text-muted">Promote a user to Manager or Admin.</p>
+
+@if (!string.IsNullOrEmpty(_message))
+{
+    <div class="alert @(_isError ? "alert-danger" : "alert-success")" role="alert">@_message</div>
+}
+
+@if (_users is null)
+{
+    <p>Loading…</p>
+}
+else if (_users.Count == 0)
+{
+    <div class="alert alert-info">No users found.</div>
+}
+else
+{
+    <div class="table-responsive">
+        <table class="table align-middle">
+            <thead>
+                <tr>
+                    <th>User</th>
+                    <th>Display Name</th>
+                    <th>Roles</th>
+                    <th style="width: 20rem;">Promote</th>
+                    <th style="width: 10rem;">Account</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var user in _users)
+                {
+                    <tr>
+                        <td>@user.UserName</td>
+                        <td>@(string.IsNullOrWhiteSpace(user.DisplayName) ? "—" : user.DisplayName)</td>
+                        <td>
+                            @if (user.Roles.Count == 0)
+                            {
+                                <span class="text-muted">None</span>
+                            }
+                            else
+                            {
+                                @foreach (var role in user.Roles)
+                                {
+                                    <span class="badge bg-secondary me-1">@role</span>
+                                }
+                            }
+                        </td>
+                        <td>
+                            <div class="d-flex gap-2">
+                                <select class="form-select form-select-sm"
+                                        @bind="_selectedRoles[user.UserName]">
+                                    <option value="Manager">Manager</option>
+                                    <option value="Admin">Admin</option>
+                                </select>
+                                <button class="btn btn-sm btn-primary"
+                                        disabled="@(_busyUser == user.UserName)"
+                                        @onclick="() => PromoteAsync(user.UserName)">
+                                    @(_busyUser == user.UserName ? "Promoting…" : "Promote")
+                                </button>
+                            </div>
+                        </td>
+                        <td>
+                            @if (_confirmingDelete == user.UserName)
+                            {
+                                <div class="d-flex gap-2">
+                                    <button class="btn btn-sm btn-danger"
+                                            disabled="@(_busyUser == user.UserName)"
+                                            @onclick="() => DeleteAsync(user.UserName)">
+                                        @(_busyUser == user.UserName ? "Deleting…" : "Confirm")
+                                    </button>
+                                    <button class="btn btn-sm btn-secondary"
+                                            disabled="@(_busyUser == user.UserName)"
+                                            @onclick="() => _confirmingDelete = null">
+                                        Cancel
+                                    </button>
+                                </div>
+                            }
+                            else
+                            {
+                                <button class="btn btn-sm btn-outline-danger"
+                                        @onclick="() => _confirmingDelete = user.UserName">
+                                    Delete
+                                </button>
+                            }
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+}
+
+@code {
+    private List<UserSummaryDto>? _users;
+    private readonly Dictionary<string, string> _selectedRoles = new();
+    private string? _busyUser;
+    private string? _confirmingDelete;
+    private string? _message;
+    private bool _isError;
+    private readonly CancellationTokenSource _cts = new();
+
+    protected override async Task OnInitializedAsync() => await LoadAsync();
+
+    private async Task LoadAsync()
+    {
+        _users = await AdminService.GetUsersAsync(_cts.Token);
+        foreach (var user in _users)
+        {
+            if (!_selectedRoles.ContainsKey(user.UserName))
+                _selectedRoles[user.UserName] = "Manager";
+        }
+    }
+
+    private async Task PromoteAsync(string userName)
+    {
+        _busyUser = userName;
+        _message = null;
+
+        var role = _selectedRoles.TryGetValue(userName, out var r) ? r : "Manager";
+        var result = await AdminService.PromoteAsync(userName, role, _cts.Token);
+
+        _busyUser = null;
+        _message = result.Message;
+        _isError = !result.Success;
+
+        if (result.Success)
+            await LoadAsync();
+    }
+
+    private async Task DeleteAsync(string userName)
+    {
+        _busyUser = userName;
+        _message = null;
+
+        var result = await AdminService.DeleteUserAsync(userName, _cts.Token);
+
+        _busyUser = null;
+        _confirmingDelete = null;
+        _message = result.Message;
+        _isError = !result.Success;
+
+        if (result.Success)
+            await LoadAsync();
+    }
+
+    public void Dispose() => _cts.Cancel();
+}

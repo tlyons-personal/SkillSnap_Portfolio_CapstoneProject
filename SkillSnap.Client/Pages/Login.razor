@@ -1,0 +1,68 @@
+@* Login page: validates credentials and redirects on success. *@
+@page "/login"
+@layout LandingLayout
+@using SkillSnap.Client.Services
+@using System.ComponentModel.DataAnnotations
+@inject AuthService AuthService
+@inject NavigationManager Navigation
+
+<h1>Login</h1>
+
+<EditForm Model="_model" OnValidSubmit="HandleLogin">
+    <DataAnnotationsValidator />
+
+    @if (!string.IsNullOrEmpty(_errorMessage))
+    {
+        <div class="alert alert-danger">@_errorMessage</div>
+    }
+
+    <div class="mb-3">
+        <label class="form-label">UserName</label>
+        <InputText class="form-control" @bind-Value="_model.UserName" />
+        <ValidationMessage For="@(() => _model.UserName)" />
+    </div>
+
+    <div class="mb-3">
+        <label class="form-label">Password</label>
+        <InputText type="password" class="form-control" @bind-Value="_model.Password" />
+        <ValidationMessage For="@(() => _model.Password)" />
+    </div>
+
+    <button type="submit" class="btn btn-primary" disabled="@_busy">
+        @(_busy ? "Signing in..." : "Login")
+    </button>
+</EditForm>
+
+@code {
+    [SupplyParameterFromQuery]
+    public string? ReturnUrl { get; set; }
+
+    private readonly LoginForm _model = new();
+    private string? _errorMessage;
+    private bool _busy;
+
+    private async Task HandleLogin()
+    {
+        _busy = true;
+        _errorMessage = null;
+
+        var result = await AuthService.LoginAsync(
+            new LoginRequest(_model.UserName!, _model.Password!));
+
+        _busy = false;
+
+        if (result.Success)
+            Navigation.NavigateTo(string.IsNullOrEmpty(ReturnUrl) ? "" : ReturnUrl);
+        else
+            _errorMessage = result.Error;
+    }
+
+    public class LoginForm
+    {
+        [Required]
+        public string? UserName { get; set; }
+
+        [Required]
+        public string? Password { get; set; }
+    }
+}

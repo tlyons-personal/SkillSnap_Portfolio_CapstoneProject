@@ -1,0 +1,33 @@
+@* Components/ProjectCard.razor *@
+@using SkillSnap.Shared.DTOs
+
+<div class="col-md-4">
+    <div class="card h-100">
+        <img src="@(string.IsNullOrWhiteSpace(Project.ImageUrl) ? PlaceholderImage : Project.ImageUrl)"
+             class="card-img-top project-image" alt="@Project.Title"
+             onerror="this.onerror=null;this.src='@PlaceholderImage';" />
+        <div class="card-body">
+            <h5 class="card-title">@Project.Title</h5>
+            @if (ShowOwner && !string.IsNullOrWhiteSpace(Project.PortfolioUserDisplayName))
+            {
+                <h6 class="card-subtitle mb-2 text-muted">@Project.PortfolioUserDisplayName</h6>
+            }
+            <p class="card-text">@Project.Description</p>
+        </div>
+        @if (OnDelete.HasDelegate)
+        {
+            <div class="card-footer d-flex gap-2">
+                <button class="btn btn-sm btn-outline-danger"
+                        @onclick="() => OnDelete.InvokeAsync(Project.Id)">Delete</button>
+            </div>
+        }
+    </div>
+</div>
+
+@code {
+    private const string PlaceholderImage = "images/project_placeholder.png";
+
+    [Parameter, EditorRequired] public ProjectDto Project { get; set; } = default!;
+    [Parameter] public EventCallback<int> OnDelete { get; set; }
+    [Parameter] public bool ShowOwner { get; set; }
+}

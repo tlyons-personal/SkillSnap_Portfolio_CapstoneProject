@@ -1,0 +1,16 @@
+@* Components/SkillBadge.razor *@
+@using SkillSnap.Shared.DTOs
+
+<span class="badge bg-secondary p-2 @(OnDelete.HasDelegate ? "d-flex align-items-center gap-2" : "")">
+    @Skill.Name <small>(@Skill.Level)</small>
+    @if (OnDelete.HasDelegate)
+    {
+        <button class="btn-close btn-close-white btn-sm"
+                aria-label="Delete" @onclick="() => OnDelete.InvokeAsync(Skill.Id)"></button>
+    }
+</span>
+
+@code {
+    [Parameter, EditorRequired] public SkillDto Skill { get; set; } = default!;
+    [Parameter] public EventCallback<int> OnDelete { get; set; }
+}

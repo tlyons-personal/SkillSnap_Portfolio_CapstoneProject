@@ -1,0 +1,76 @@
+@* Lists the user's projects and allows adding or deleting them. *@
+@page "/projects"
+@attribute [Authorize]
+@implements IDisposable
+@using SkillSnap.Shared.DTOs
+@using SkillSnap.Shared.Models
+@using SkillSnap.Client.Services
+@using Microsoft.AspNetCore.Components.Authorization
+@inject ProjectService ProjectService
+@inject AuthenticationStateProvider AuthStateProvider
+
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <h1>Projects</h1>
+    <button class="btn btn-primary" @onclick="() => _showAdd = true">+ Add Project</button>
+</div>
+
+@if (_projects is null)
+{
+    <p>Loading…</p>
+}
+else if (_projects.Count == 0)
+{
+    <div class="alert alert-info">No projects yet. Add your first one!</div>
+}
+else
+{
+    <div class="row g-3">
+        @foreach (var p in _projects)
+        {
+            <ProjectCard Project="p" OnDelete="DeleteAsync" ShowOwner="_canSeeOwners" />
+        }
+    </div>
+}
+
+@if (_showAdd)
+{
+    <div class="card mt-4 p-3">
+        <h5>New Project</h5>
+        <EditForm Model="_newProject" OnValidSubmit="AddAsync">
+            <DataAnnotationsValidator />
+            <InputText class="form-control mb-2" placeholder="Title" @bind-Value="_newProject.Title" />
+            <InputTextArea class="form-control mb-2" placeholder="Description" @bind-Value="_newProject.Description" />
+            <InputText class="form-control mb-2" placeholder="Image URL" @bind-Value="_newProject.ImageUrl" />
+            <button class="btn btn-success" type="submit">Save</button>
+            <button class="btn btn-link" type="button" @onclick="() => _showAdd = false">Cancel</button>
+        </EditForm>
+    </div>
+}
+
+@code {
+    private List<ProjectDto>? _projects;
+    private bool _showAdd;
+    private bool _canSeeOwners;
+    private Project _newProject = new() { Title = "", Description = "" };
+    private readonly CancellationTokenSource _cts = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        var authState = await AuthStateProvider.GetAuthenticationStateAsync();
+        _canSeeOwners = authState.User.IsInRole("Manager") || authState.User.IsInRole("Admin");
+        _projects = await ProjectService.GetAsync(ct: _cts.Token);
+    }
+
+    private async Task AddAsync()
+    {
+        // AddAsync appends to the cached list that _projects already references — no reload needed.
+        await ProjectService.AddAsync(_newProject, _cts.Token);
+        _newProject = new() { Title = "", Description = "" };
+        _showAdd = false;
+    }
+
+    private async Task DeleteAsync(int id)
+        => await ProjectService.DeleteAsync(id, _cts.Token);
+
+    public void Dispose() => _cts.Cancel();
+}

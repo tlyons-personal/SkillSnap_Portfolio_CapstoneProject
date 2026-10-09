@@ -1,0 +1,73 @@
+@* Registration page: creates a new account then redirects to login. *@
+@page "/register"
+@layout LandingLayout
+@using SkillSnap.Client.Services
+@using System.ComponentModel.DataAnnotations
+@inject AuthService AuthService
+@inject NavigationManager Navigation
+
+<h1>Register</h1>
+
+<EditForm Model="_model" OnValidSubmit="HandleRegister">
+    <DataAnnotationsValidator />
+
+    @if (!string.IsNullOrEmpty(_errorMessage))
+    {
+        <div class="alert alert-danger">@_errorMessage</div>
+    }
+
+    <div class="mb-3">
+        <label class="form-label">UserName</label>
+        <InputText class="form-control" @bind-Value="_model.UserName" />
+        <ValidationMessage For="@(() => _model.UserName)" />
+    </div>
+
+    <div class="mb-3">
+        <label class="form-label">Password</label>
+        <InputText type="password" class="form-control" @bind-Value="_model.Password" />
+        <ValidationMessage For="@(() => _model.Password)" />
+    </div>
+
+    <div class="mb-3">
+        <label class="form-label">Confirm Password</label>
+        <InputText type="password" class="form-control" @bind-Value="_model.ConfirmPassword" />
+        <ValidationMessage For="@(() => _model.ConfirmPassword)" />
+    </div>
+
+    <button type="submit" class="btn btn-primary" disabled="@_busy">
+        @(_busy ? "Creating Profile..." : "Register")
+    </button>
+</EditForm>
+
+@code {
+    private readonly RegisterForm _model = new();
+    private string? _errorMessage;
+    private bool _busy;
+
+    private async Task HandleRegister()
+    {
+        _busy = true;
+        _errorMessage = null;
+
+        var result = await AuthService.RegisterAsync(
+            new RegisterRequest(_model.UserName!, _model.Password!, _model.ConfirmPassword!));
+        
+        _busy = false;
+        
+        if (result.Success)
+            Navigation.NavigateTo("/login");
+        else
+            _errorMessage = result.Error;
+    }
+
+    public class RegisterForm
+    {
+        [Required]
+        public string? UserName { get; set; }
+        [Required]
+        public string? Password { get; set; }
+        [Required]
+        [Compare(nameof(Password), ErrorMessage = "The password and confirmation password do not match.")]
+        public string? ConfirmPassword { get; set; }
+    }
+}

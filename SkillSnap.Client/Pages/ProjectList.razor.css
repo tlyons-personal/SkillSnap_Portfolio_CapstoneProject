@@ -1,0 +1,26 @@
+/* Pages/ProjectList.razor.css (scoped) */
+::deep .card {
+    background: #2A3956;
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    color: #F5F5F5;
+}
+
+::deep .card-footer {
+    background: transparent;
+    border-top: 1px solid rgba(255, 255, 255, 0.12);
+}
+
+::deep .form-control,
+::deep .form-select {
+    background-color: #2A3956;
+    border-color: rgba(255, 255, 255, 0.18);
+    color: #F5F5F5;
+}
+
+    ::deep .form-control::placeholder {
+        color: #B8C1D9;
+    }
+
+::deep .form-label {
+    color: #F5F5F5;
+}

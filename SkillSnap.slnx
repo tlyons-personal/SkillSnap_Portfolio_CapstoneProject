@@ -1,0 +1,5 @@
+<Solution>
+  <Project Path="SkillSnap.Api/SkillSnap.Api.csproj" />
+  <Project Path="SkillSnap.Client/SkillSnap.Client.csproj" />
+  <Project Path="SkillSnap.Shared/SkillSnap.Shared.csproj" />
+</Solution>

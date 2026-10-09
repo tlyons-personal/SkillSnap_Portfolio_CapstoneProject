@@ -1,0 +1,107 @@
+@* Manager/Admin view of a single user's profile, projects, and skills. *@
+@page "/manage/portfolios/{Id:int}"
+@attribute [Authorize(Roles = "Manager,Admin")]
+@implements IDisposable
+@using SkillSnap.Shared.DTOs
+@using SkillSnap.Shared.Models
+@using SkillSnap.Client.Services
+@inject PortfolioUserService PortfolioUsers
+@inject ProjectService ProjectService
+@inject SkillService SkillService
+
+<PageTitle>Manage · Portfolio</PageTitle>
+
+<a class="btn btn-link px-0 mb-2" href="manage/portfolios">&larr; Back to users</a>
+
+@if (_notFound)
+{
+    <div class="alert alert-warning">That user could not be found.</div>
+}
+else if (_user is null)
+{
+    <p>Loading…</p>
+}
+else
+{
+    <div class="d-flex align-items-center gap-3 mb-4">
+        <img src="@(string.IsNullOrWhiteSpace(_user.ProfileImageUrl) ? PlaceholderImage : _user.ProfileImageUrl)"
+             alt="@_user.UserName"
+             class="rounded-circle" style="width:64px;height:64px;object-fit:cover;"
+             onerror="this.onerror=null;this.src='@PlaceholderImage';" />
+        <div>
+            <h1 class="mb-0">@_user.FullNameOr(_user.UserName)</h1>
+            <span class="text-muted">@@@_user.UserName</span>
+        </div>
+    </div>
+
+    @if (!string.IsNullOrWhiteSpace(_user.Bio))
+    {
+        <p>@_user.Bio</p>
+    }
+
+    <h2 class="h4 mt-4">Projects</h2>
+    @if (_projects is null)
+    {
+        <p>Loading…</p>
+    }
+    else if (_projects.Count == 0)
+    {
+        <div class="alert alert-info">No projects.</div>
+    }
+    else
+    {
+        <div class="row g-3">
+            @foreach (var p in _projects)
+            {
+                <ProjectCard Project="p" />
+            }
+        </div>
+    }
+
+    <h2 class="h4 mt-4">Skills</h2>
+    @if (_skills is null)
+    {
+        <p>Loading…</p>
+    }
+    else if (_skills.Count == 0)
+    {
+        <div class="alert alert-info">No skills.</div>
+    }
+    else
+    {
+        <div class="d-flex flex-wrap gap-2">
+            @foreach (var s in _skills)
+            {
+                <SkillBadge Skill="s" />
+            }
+        </div>
+    }
+}
+
+@code {
+    private const string PlaceholderImage = "images/profile_placeholder.png";
+
+    [Parameter]
+    public int Id { get; set; }
+
+    private PortfolioUser? _user;
+    private List<ProjectDto>? _projects;
+    private List<SkillDto>? _skills;
+    private bool _notFound;
+    private readonly CancellationTokenSource _cts = new();
+
+    protected override async Task OnParametersSetAsync()
+    {
+        _user = await PortfolioUsers.GetByIdAsync(Id, _cts.Token);
+        if (_user is null)
+        {
+            _notFound = true;
+            return;
+        }
+
+        _projects = await ProjectService.GetForUserAsync(Id, _cts.Token);
+        _skills = await SkillService.GetForUserAsync(Id, _cts.Token);
+    }
+
+    public void Dispose() => _cts.Cancel();
+}

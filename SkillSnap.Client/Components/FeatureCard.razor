@@ -1,0 +1,13 @@
+@* Components/FeatureCard.razor *@
+<a class="feature-card" href="@Href">
+    <span class="bi @Icon feature-icon" aria-hidden="true"></span>
+    <h3 class="feature-card-title">@Title</h3>
+    <p class="feature-card-text">@Text</p>
+</a>
+
+@code {
+    [Parameter, EditorRequired] public string Icon { get; set; } = "";
+    [Parameter, EditorRequired] public string Title { get; set; } = "";
+    [Parameter, EditorRequired] public string Text { get; set; } = "";
+    [Parameter, EditorRequired] public string Href { get; set; } = "";
+}

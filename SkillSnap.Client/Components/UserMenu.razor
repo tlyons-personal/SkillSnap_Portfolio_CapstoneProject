@@ -1,0 +1,43 @@
+@using Microsoft.AspNetCore.Components.Authorization
+@using SkillSnap.Client.Services
+@inject AuthService AuthService
+@inject PortfolioUserService PortfolioUsers
+@inject AuthenticationStateProvider AuthStateProvider
+@inject NavigationManager Navigation
+
+<AuthorizeView>
+    <Authorized>
+        <div class="user-menu">
+            <!-- Profile picture, or a placeholder when it's missing or fails to load. -->
+            <img src="@(string.IsNullOrWhiteSpace(_profileImageUrl) ? PlaceholderImage : _profileImageUrl)"
+                 alt="@context.User.Identity?.Name" class="user-avatar"
+                 onerror="this.onerror=null;this.src='@PlaceholderImage';" />
+            <span class="user-greeting">Hello, @context.User.Identity?.Name</span>
+            <button class="btn btn-sm btn-outline-secondary" @onclick="LogoutAsync">Logout</button>
+        </div>
+    </Authorized>
+</AuthorizeView>
+
+@code {
+    // Fallback image when the user has no valid profile picture.
+    private const string PlaceholderImage = "images/profile_placeholder.png";
+
+    private string? _profileImageUrl;
+
+    // Load the signed-in user's profile image once the component starts.
+    protected override async Task OnInitializedAsync()
+    {
+        var authState = await AuthStateProvider.GetAuthenticationStateAsync();
+        if (authState.User.Identity?.IsAuthenticated == true)
+        {
+            var profile = await PortfolioUsers.GetMyProfileAsync();
+            _profileImageUrl = profile?.ProfileImageUrl;
+        }
+    }
+
+    private async Task LogoutAsync()
+    {
+        await AuthService.LogoutAsync();
+        Navigation.NavigateTo("/");
+    }
+}

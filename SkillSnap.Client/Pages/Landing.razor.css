@@ -1,0 +1,12 @@
+/* Pages/Landing.razor.css (scoped) */
+.hero-logo { width: 400px; height: auto; margin-bottom: 1rem; }
+.hero-title { font-size: 1.75rem; font-weight: 700; }
+/*.hero-subtitle { font-size: 1.25rem; opacity: .85; margin-bottom: 2rem; } */
+.hero-actions { display: flex; gap: 1rem; justify-content: center; flex-wrap: wrap; }
+
+/*.feature-grid {
+    margin-top: 3.5rem;
+    display: grid;
+    gap: 1.5rem;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+}*/

@@ -1,0 +1,39 @@
+@* Public landing page; redirects signed-in users to the dashboard. *@
+@page "/"
+@layout LandingLayout
+@using Microsoft.AspNetCore.Components.Authorization
+@using SkillSnap.Client.Components
+@inject NavigationManager Navigation
+
+<PageTitle>SkillSnap</PageTitle>
+
+<AuthorizeView>
+    @* Already signed in? Send them to the app. *@
+    <Authorized>
+        @{ Navigation.NavigateTo("/dashboard"); }
+    </Authorized>
+    <NotAuthorized>
+        <header class="hero text-center">
+            <img src="images/FullLogo_Transparent_NoBuffer.png" alt="SkillSnap logo" class="hero-logo" />
+            <!--h1 class="hero-title">SkillSnap</h1-->
+            <p class="hero-title">Show off your projects and skills in one place.</p>
+
+            <div class="hero-actions">
+                <a class="btn btn-primary btn-lg" href="register">Get Started &rarr; Register</a>
+                <a class="btn btn-outline-light btn-lg" href="login">Log In</a>
+            </div>
+        </header>
+
+        <section class="feature-grid">
+            <FeatureCard Icon="bi-person-badge" Title="Your Profile"
+                         Text="Update your portfolio record, bio, and photo."
+                         Href="profile" />
+            <FeatureCard Icon="bi-kanban" Title="Projects"
+                         Text="View, add, edit, and delete your projects."
+                         Href="projects" />
+            <FeatureCard Icon="bi-stars" Title="Skills"
+                         Text="View, add, edit, and delete your skills."
+                         Href="skills" />
+        </section>
+    </NotAuthorized>
+</AuthorizeView>

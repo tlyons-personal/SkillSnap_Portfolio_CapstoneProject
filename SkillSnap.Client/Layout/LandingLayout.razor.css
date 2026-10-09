@@ -1,0 +1,14 @@
+/* Layout/LandingLayout.razor */
+.landing-shell {
+    min-height: 100vh;
+    display: flex;
+    justify-content: center;
+    background: #1C2C4B;
+}
+
+.landing-main {
+    width: 100%;
+    max-width: 960px;
+    padding: 3rem 1.5rem;
+    color: #F5F5F5;
+}

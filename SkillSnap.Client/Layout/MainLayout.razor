@@ -1,0 +1,50 @@
+﻿@inherits LayoutComponentBase
+@implements IDisposable
+@inject NavigationManager Navigation
+
+<div class="page">
+    <div class="sidebar">
+        <NavMenu />
+    </div>
+
+    <main>
+        <div class="top-row px-4">
+            <UserMenu /> @* Hello, user + logout, pinned top-right *@
+        </div>
+
+        <article class="content px-4">
+            <ErrorBoundary @ref="errorBoundary">
+                <ChildContent>
+                    @Body
+                </ChildContent>
+                <ErrorContent Context="ex">
+                    <div class="alert alert-danger" role="alert">
+                        <h4 class="alert-heading">Something went wrong.</h4>
+                        <p>An unexpected error occurred. Please refresh the page or try again.</p>
+                        @* Remove or guard before production *@
+                        <pre class="mb-0">@ex.Message</pre>
+                    </div>
+                </ErrorContent>
+            </ErrorBoundary>
+        </article>
+    </main>
+</div>
+
+@code {
+    private ErrorBoundary? errorBoundary;
+
+    protected override void OnInitialized()
+    {
+        Navigation.LocationChanged += HandleLocationChanged;
+    }
+
+    private void HandleLocationChanged(object? sender, LocationChangedEventArgs e)
+    {
+        errorBoundary?.Recover();
+    }
+
+    public void Dispose()
+    {
+        Navigation.LocationChanged -= HandleLocationChanged;
+    }
+}
